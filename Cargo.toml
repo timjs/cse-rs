@@ -1,0 +1,5 @@
+[package]
+
+name = "cse-rs"
+version = "0.0.1"
+authors = ["Tim Steenvoorden <tim.steenvoorden@gmail.com>"]
