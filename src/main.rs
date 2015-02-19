@@ -1,7 +1,3 @@
-// #![allow(unstable)]
-// #![feature(std_misc)]
-// #![feature(io)]
-
 use std::old_io::stdio::stdin;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -22,24 +18,6 @@ enum Expr {
 
 type Name = String;
 type Repl = i32;
-
-/*
-struct IterMut<'a> {
-    expr: &'a mut Expr,
-    node: &'a mut Expr,
-}
-
-impl<'a> Iterator for IterMut<'a> {
-    type Item = &'a mut Expr;
-    fn next(&mut self) -> Option<&'a mut Expr> {
-        match *self.expr {
-            App(_, ref mut left, ref mut right) => unimplemented!(), //Some(left),
-            Var(_) => None,
-            Sub(_) => None,
-        }
-    }
-}
-*/
 
 // Display
 
@@ -153,18 +131,12 @@ fn main() {
     let first_line = stdin().read_line().unwrap();
     let line_count = first_line.trim().parse::<u32>().unwrap();
     for _ in (0..line_count) {
-        println!(">> Reading line...");
         let line = stdin().read_line().unwrap();
-        println!(">> Creating parser...");
         let mut parser = Parser::new(&line);
-        println!(">> Executing parser...");
         let expr = parser.parse();
-        println!(">> Creating state...");
         let mut state = State::new();
-        // let result = expr.cse(&mut state);
-        let result = expr;
+        let result = expr.cse(&mut state);
         println!("{}", result);
-        // println!(":: result: {}", expr);
     }
 }
 
