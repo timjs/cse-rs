@@ -1,3 +1,6 @@
+#![feature(old_io)]
+#![feature(std_misc)]
+
 use std::old_io::stdio::stdin;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -25,8 +28,8 @@ impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             App(ref n, ref l, ref r) => write!(f, "{}({},{})", n, l, r),
-            Var(ref n)               => write!(f, "{}", n),
-            Sub(ref r)               => write!(f, "{}", r),
+            Var(ref n) => write!(f, "{}", n),
+            Sub(ref r) => write!(f, "{}", r),
         }
     }
 }
@@ -74,8 +77,8 @@ impl<'a> Parser<'a> {
         let name = self.name();
         match self.chars.peek() {
             Some(&'(') => self.app(name),
-            Some(_)    => self.var(name),
-            _          => unreachable!(),
+            Some(_) => self.var(name),
+            _ => unreachable!(),
         }
     }
 
