@@ -1,14 +1,16 @@
-#![feature(old_io)]
+#![feature(io)]
 #![feature(std_misc)]
 
-use std::old_io::stdio::stdin;
+use std::io;
+use std::io::BufReader;
+use std::io::BufReadExt;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::fmt;
-use std::collections::HashMap;
+use std::collections::hash_map::HashMap;
 use std::collections::hash_map::Entry::*;
 
-use Expr::{App,Var,Sub};
+use Expr::*;
 
 // Expressions
 
@@ -25,6 +27,7 @@ type Repl = i32;
 // Display
 
 impl fmt::Display for Expr {
+
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             App(ref n, ref l, ref r) => write!(f, "{}({},{})", n, l, r),
@@ -32,6 +35,7 @@ impl fmt::Display for Expr {
             Sub(ref r) => write!(f, "{}", r),
         }
     }
+
 }
 
 // Parser
@@ -74,6 +78,7 @@ impl<'a> Parser<'a> {
     }
 
     fn expr(&mut self) -> Expr {
+        // let name = self.chars.take_while(|&c| c.is_alphabetic()).collect() /// Moves uit of `chars`!
         let name = self.name();
         match self.chars.peek() {
             Some(&'(') => self.app(name),
@@ -131,10 +136,11 @@ impl Expr {
 // Main
 
 fn main() {
-    let first_line = stdin().read_line().unwrap();
-    let line_count = first_line.trim().parse::<u32>().unwrap();
-    for _ in (0..line_count) {
-        let line = stdin().read_line().unwrap();
+    let mut lines = BufReader::new(io::stdin()).lines();
+    lines.next(); // line_count
+
+    for read in lines {
+        let line = read.unwrap();
         let mut parser = Parser::new(&line);
         let expr = parser.parse();
         let mut state = State::new();
@@ -142,4 +148,3 @@ fn main() {
         println!("{}", result);
     }
 }
-
