@@ -153,22 +153,23 @@ impl Expr {
 
 // Main
 
-fn main() {
+fn run() {
     let mut lines = BufReader::new(io::stdin()).lines();
     lines.next(); // line_count
 
     // for read in lines {
     while let Some(Ok(line)) = lines.next() {
         // let line = read.unwrap();
-        println!(">> Creating parser");
         let mut parser = Parser::new(&line);
-        println!(">> Parsing");
         let expr = parser.expr();
-        println!(">> Creating state");
         let mut state = State::new();
-        println!(">> Eliminating");
         let result = expr.cse(&mut state);
         println!("{}", result);
     }
+}
+
+fn main () {
+    let thread = std::thread::Builder::new().stack_size(16_000_000);
+    thread.scoped(run);
 }
 
