@@ -1,14 +1,12 @@
-#![feature(io)]
-#![feature(std_misc)]
-
 use std::io;
+use std::io::BufRead;
 use std::io::BufReader;
-use std::io::BufReadExt;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::fmt;
 use std::collections::hash_map::HashMap;
 use std::collections::hash_map::Entry::*;
+use std::thread;
 
 use Expr::*;
 
@@ -64,7 +62,7 @@ impl<'a> Parser<'a> {
     }
 
     fn name(&mut self) -> Name {
-        self.take_while(CharExt::is_alphabetic)
+        self.take_while(char::is_alphabetic)
     }
 
     fn var(&mut self, name: Name) -> Expr {
@@ -155,11 +153,11 @@ impl Expr {
 
 fn run() {
     let mut lines = BufReader::new(io::stdin()).lines();
-    lines.next(); // line_count
+    lines.next(); // = line_count
 
-    // for read in lines {
-    while let Some(Ok(line)) = lines.next() {
-        // let line = read.unwrap();
+    for read in lines {
+    // while let Some(Ok(line)) = lines.next() {
+        let line = read.unwrap();
         let mut parser = Parser::new(&line);
         let expr = parser.expr();
         let mut state = State::new();
@@ -169,7 +167,8 @@ fn run() {
 }
 
 fn main () {
-    let thread = std::thread::Builder::new().stack_size(16_000_000);
-    thread.scoped(run);
+    let thread = thread::Builder::new().stack_size(16_000_000);
+    let guard = thread.scoped(run);
+    guard.unwrap().join();
 }
 
