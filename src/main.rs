@@ -1,3 +1,6 @@
+use std::hash::Hash;
+use std::hash::Hasher;
+use std::hash::SipHasher;
 use std::io;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -12,15 +15,30 @@ use Expr::*;
 
 // Expressions
 
-#[derive(PartialEq,Eq,Hash)]
+#[derive(PartialEq,Eq)]
 enum Expr {
-    App(Name, Box<Expr>, Box<Expr>),
-    Var(Name),
+    App(Id, Name, Box<Expr>, Box<Expr>),
+    Var(Id, Name),
     Sub(Repl),
 }
 
+type Id   = u64;
 type Name = String;
 type Repl = i32;
+
+// Hash
+
+impl Hash for Expr {
+
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        match *self {
+            App(i, _, _, _) => i.hash(state),
+            Var(i, _) => i.hash(state),
+            Sub(_) => unreachable!(),
+        }
+    }
+
+}
 
 // Display
 
@@ -28,8 +46,8 @@ impl fmt::Display for Expr {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            App(ref n, ref l, ref r) => write!(f, "{}({},{})", n, l, r),
-            Var(ref n) => write!(f, "{}", n),
+            App(_, ref n, ref l, ref r) => write!(f, "{}({},{})", n, l, r),
+            Var(_, ref n) => write!(f, "{}", n),
             Sub(ref r) => write!(f, "{}", r),
         }
     }
@@ -45,7 +63,7 @@ struct Parser<'a> {
 impl<'a> Parser<'a> {
 
     fn new(s: &'a str) -> Parser<'a> {
-        Parser{chars: s.chars().peekable()}
+        Parser { chars: s.chars().peekable() }
     }
 
     fn take_while<F: Fn(char) -> bool>(&mut self, pred: F) -> String {
@@ -66,7 +84,11 @@ impl<'a> Parser<'a> {
     }
 
     fn var(&mut self, name: Name) -> Expr {
-        Var(name)
+        let mut hasher = SipHasher::new();
+        name.hash(&mut hasher);
+        let id = hasher.finish();
+
+        Var(id, name)
     }
 
     fn app(&mut self, name: Name) -> Expr {
@@ -75,7 +97,14 @@ impl<'a> Parser<'a> {
         self.chars.next(); // ','
         let right = self.expr();
         self.chars.next(); // ')'
-        App(name, Box::new(left), Box::new(right))
+
+        let mut hasher = SipHasher::new();
+        name.hash(&mut hasher);
+        left.hash(&mut hasher);
+        right.hash(&mut hasher);
+        let id = hasher.finish();
+
+        App(id, name, Box::new(left), Box::new(right))
     }
 
     fn expr(&mut self) -> Expr {
@@ -137,12 +166,12 @@ impl Expr {
             }
         }
         match *self {
-            App(ref n, ref l, ref r) => {
+            App(i, ref n, ref l, ref r) => {
                 let l_ = l.cse(state);
                 let r_ = r.cse(state);
-                return App(n.clone(), Box::new(l_), Box::new(r_));
+                return App(i, n.clone(), Box::new(l_), Box::new(r_));
             },
-            Var(ref n) => return Var(n.clone()),
+            Var(i, ref n) => return Var(i, n.clone()),
             Sub(_) => unreachable!(),
         }
     }
@@ -168,7 +197,7 @@ fn run() {
 
 fn main () {
     let thread = thread::Builder::new().stack_size(16_000_000);
-    let guard = thread.scoped(run);
-    guard.unwrap().join();
+    let handle = thread.spawn(run);
+    handle.unwrap().join();
 }
 
