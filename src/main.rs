@@ -22,7 +22,7 @@ enum Expr {
     Sub(Repl),
 }
 
-type Id   = u64;
+type Id = u64;
 type Name = String;
 type Repl = i32;
 
@@ -143,12 +143,12 @@ impl Expr {
     //         state.map.insert(&self, state.num);
     //         state.num += 1;
     //         match *self {
-    //             App(ref n, ref l, ref r) => {
+    //             App(i, ref n, ref l, ref r) => {
     //                 let l_ = l.cse(state);
     //                 let r_ = r.cse(state);
-    //                 App(n.clone(), Box::new(l_), Box::new(r_))
+    //                 App(i, n.clone(), Box::new(l_), Box::new(r_))
     //             },
-    //             Var(ref n) => Var(n.clone()),
+    //             Var(i, ref n) => Var(i, n.clone()),
     //             Sub(_) => unreachable!(),
     //         }
     //     }
