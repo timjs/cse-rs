@@ -1,14 +1,19 @@
+use std::collections::hash_map::HashMap;
+use std::collections::hash_map::Entry::*;
+
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::hash::SipHasher;
+
 use std::io;
 use std::io::BufRead;
 use std::io::BufReader;
+
 use std::iter::Peekable;
 use std::str::Chars;
+
 use std::fmt;
-use std::collections::hash_map::HashMap;
-use std::collections::hash_map::Entry::*;
+
 use std::thread;
 
 use Expr::*;
@@ -26,20 +31,6 @@ type Id = u64;
 type Name = String;
 type Repl = i32;
 
-// Hash
-
-impl Hash for Expr {
-
-    fn hash<H>(&self, state: &mut H) where H: Hasher {
-        match *self {
-            App(i, _, _, _) => i.hash(state),
-            Var(i, _) => i.hash(state),
-            Sub(_) => unreachable!(),
-        }
-    }
-
-}
-
 // Display
 
 impl fmt::Display for Expr {
@@ -49,6 +40,20 @@ impl fmt::Display for Expr {
             App(_, ref n, ref l, ref r) => write!(f, "{}({},{})", n, l, r),
             Var(_, ref n) => write!(f, "{}", n),
             Sub(ref r) => write!(f, "{}", r),
+        }
+    }
+
+}
+
+// Hash
+
+impl Hash for Expr {
+
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        match *self {
+            App(i, _, _, _) => i.hash(state),
+            Var(i, _) => i.hash(state),
+            Sub(_) => unreachable!(),
         }
     }
 
@@ -122,8 +127,8 @@ impl<'a> Parser<'a> {
 // Elimination
 
 struct State<'a> {
-    num: Repl,
     map: HashMap<&'a Expr, Repl>,
+    num: Repl,
 }
 
 impl<'a> State<'a> {
@@ -162,7 +167,7 @@ impl Expr {
             Vacant(e) => {
                 e.insert(state.num);
                 state.num += 1;
-                // match on self has to be out of this match to satisfy the borrowchecker
+                // match on self has to be out of this match to satisfy the borrow of state
             }
         }
         match *self {
