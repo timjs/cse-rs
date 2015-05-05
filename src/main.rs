@@ -1,5 +1,5 @@
 use std::collections::hash_map::HashMap;
-use std::collections::hash_map::Entry::*;
+use std::collections::hash_map::Entry::{Occupied,Vacant};
 
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -16,7 +16,7 @@ use std::fmt;
 
 use std::thread;
 
-use Expr::*;
+use Expr::{App,Var,Sub};
 
 // Expressions
 
@@ -201,7 +201,7 @@ fn run() {
 }
 
 fn main () {
-    let thread = thread::Builder::new().stack_size(16_000_000);
+    let thread = thread::Builder::new().stack_size(8_000_000);
     let handle = thread.spawn(run);
     handle.unwrap().join();
 }
