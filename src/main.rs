@@ -49,7 +49,7 @@ impl fmt::Display for Expr {
 
 impl Hash for Expr {
 
-    fn hash<H>(&self, state: &mut H) where H: Hasher {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         match *self {
             App(i, _, _, _) => i.hash(state),
             Var(i, _) => i.hash(state),
@@ -68,7 +68,7 @@ struct Parser<'a> {
 impl<'a> Parser<'a> {
 
     fn new(s: &'a str) -> Parser<'a> {
-        Parser { chars: s.chars().peekable() }
+        Parser{chars: s.chars().peekable()}
     }
 
     fn take_while<F: Fn(char) -> bool>(&mut self, pred: F) -> String {
@@ -113,7 +113,7 @@ impl<'a> Parser<'a> {
     }
 
     fn expr(&mut self) -> Expr {
-        // let name = self.chars.take_while(|&c| c.is_alphabetic()).collect() /// Moves uit of `chars`!
+        // let name = self.chars.take_while(|&c| c.is_alphabetic()).collect() /// Collect moves uit of `chars`!
         let name = self.name();
         match self.chars.peek() {
             Some(&'(') => self.app(name),
